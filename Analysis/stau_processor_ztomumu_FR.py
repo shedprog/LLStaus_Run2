@@ -104,10 +104,14 @@ class Processor(pepper.ProcessorBasicPhysics):
         
         # 2 tag muons
         selector.set_column("Muon_tag", self.select_muons) 
-        selector.add_cut("two_muons_one_trig", self.two_muons_cut_one_trig)
+        # selector.add_cut("two_muons_one_trig", self.two_muons_cut_one_trig)
+        selector.add_cut("Two_muons", lambda data: ak.num(data["Muon_tag"]) == 2)
+        selector.add_cut("Muon_pair", self.muon_pair)
+        selector.add_cut("Lead_pass_trigger", self.lead_pass_trigger)
         
         selector.set_column("sum_mumu", self.sum_mumu)
         selector.add_cut("mass_window", self.mass_window)
+        selector.add_cut("mumu_dr", self.mumu_dr)
         
         if is_mc:
             selector.set_column("sum_ll_gen", self.sum_ll_gen)
@@ -122,7 +126,6 @@ class Processor(pepper.ProcessorBasicPhysics):
         
         selector.add_cut("muon_sfs", partial(self.get_muon_sfs, is_mc=is_mc))
         selector.add_cut("charge", self.charge)
-        selector.add_cut("mumu_dr", self.mumu_dr)
         selector.add_cut("dy_gen_sfs", partial(self.get_dy_gen_sfs, is_mc=is_mc, dsname=dsname))
         
         selector.set_column("Jet_select", self.jet_selection)
@@ -207,7 +210,28 @@ class Processor(pepper.ProcessorBasicPhysics):
             & (ele[self.config["elec_ID"]] == 1)
             )
         return ele[is_good]
-    
+
+    @zero_handler
+    def lead_pass_trigger(self, data):
+        lead_muons = data["Muon_tag"][:,:1]
+        trig_muons = data["TrigObj"]
+        trig_muons = trig_muons[
+            (abs(trig_muons.id) == 13)
+            & (trig_muons.filterBits >= 8)
+        ]
+        matches, dRlist = lead_muons.nearest(trig_muons, return_metric=True, threshold=0.2)
+        has_matched = ~ak.is_none(matches, axis=1)
+        return has_matched[:,0] # since lead_muons has form: [ [muon1], [muon2], ....]
+
+    @zero_handler
+    def muon_pair(self, data):
+        muons = data["Muon_tag"]
+        muon1 = muons[:,0]
+        muon2 = muons[:,1]
+        muon1_pass = muon1.pt > self.config["muon_pt_min_lead"]
+        muon2_pass = muon2.pt > self.config["muon_pt_min_sublead"]
+        return muon1_pass & muon2_pass
+
     @zero_handler
     def loose_muon_veto_cut(self, data):
         return ak.num(data["muon_veto"])==0
@@ -337,7 +361,7 @@ class Processor(pepper.ProcessorBasicPhysics):
     def select_muons(self, data):
         muons = data["Muon"]
         is_good = (
-              (muons.pt > self.config["muon_pt_min"])
+              (muons.pt > self.config["muon_pt_min_sublead"])
             & (muons.eta < self.config["muon_eta_max"])
             & (muons.eta > self.config["muon_eta_min"])
             & (muons[self.config["muon_ID"]] == 1)
@@ -345,8 +369,7 @@ class Processor(pepper.ProcessorBasicPhysics):
             & (abs(muons.dxy) <= self.config["muon_absdxy"])
             & (abs(muons.dz) <= self.config["muon_absdz"])
             )
-        muons = muons[is_good]
-        
+        muons = muons[is_good]        
         return muons
     
     @zero_handler
@@ -425,29 +448,27 @@ class Processor(pepper.ProcessorBasicPhysics):
     def get_muon_sfs(self, data, is_mc):
         weight = np.ones(len(data))
         if is_mc:
-            id_iso_sfs, systematics = self.muon_id_iso_sfs(data)
+            muons = data["Muon_tag"]
+            id_iso_sfs, systematics = \
+                self.muon_sfs(muons, sfs_name_config="muon_sf")
             weight *= ak.to_numpy(id_iso_sfs)
-            mu_trigger_sfs = self.apply_mu_trigger_sfs(data) # systematics are not implemented yet
+            muon_leading = muons[:,:1] # trigger_sfs are applied only to leading muon
+            mu_trigger_sfs, systematics_trig = \
+                self.muon_sfs(muon_leading, sfs_name_config="muon_sf_trigger")
             weight *= ak.to_numpy(mu_trigger_sfs)
+            systematics.update(systematics_trig)
             return weight, systematics
         else:
             return weight
 
-    def apply_mu_trigger_sfs(self, data):
-        weight = np.ones(len(data))
-        # Single muon trigger efficiency applied for leading muon
-        muon = ak.firsts(data["Muon_tag"])
-        sfs = self.config["single_mu_trigger_sfs"][0](pt=muon.pt, eta=abs(muon.eta))
-        return weight * sfs
-
-    def muon_id_iso_sfs(self, data):
+    def muon_sfs(self, muons, sfs_name_config = "muon_sf"):
         """Compute identification and isolation scale factors for
-           leptons (electrons and muons)."""
-        muons = data["Muon_tag"]
-        weight = np.ones(len(data))
+           leptons (electrons and muons). Also possible
+           to use for muon trigger scale factors."""
+        weight = np.ones(len(muons))
         systematics = {}
         # Muon identification and isolation efficiency
-        for i, sffunc in enumerate(self.config["muon_sf"]):
+        for i, sffunc in enumerate(self.config[sfs_name_config]):
             params = {}
             for dimlabel in sffunc.dimlabels:
                 if dimlabel == "abseta":
@@ -455,7 +476,7 @@ class Processor(pepper.ProcessorBasicPhysics):
                 else:
                     params[dimlabel] = getattr(muons, dimlabel)
             central = ak.prod(sffunc(**params), axis=1)
-            key = f"muonsf{i}"
+            key = f"{sfs_name_config}{i}"
             if self.config["compute_systematics"]:
                 if ("split_muon_uncertainty" not in self.config
                         or not self.config["split_muon_uncertainty"]):

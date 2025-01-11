@@ -84,7 +84,8 @@ class Processor(pepper.ProcessorBasicPhysics):
                     dsname.startswith("DY4JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8") ):
             selector.add_cut("DY jet reweighting",
                 partial(self.do_dy_jet_reweighting))
-            
+        
+        # selector.add_cut("empty_cut", lambda data: ak.Array(np.ones(len(data))))
         # return
         
         # Triggers
@@ -138,6 +139,9 @@ class Processor(pepper.ProcessorBasicPhysics):
 
         # add cuts and selections on the jets
         selector.set_column("Jet_select", self.jet_selection)
+        if self.config["b-veto"]:
+            selector.add_cut("b-veto", partial(self.b_tagged_jet_cut, name="Jet_select"))
+        selector.set_column("Jet_select", self.jet_veto_drop)
         selector.add_cut("has_more_two_jets", self.has_more_two_jets)
         selector.set_column("Jet_select", self.getloose_jets)
         # return
@@ -145,6 +149,8 @@ class Processor(pepper.ProcessorBasicPhysics):
         selector.set_column("Jet_lead_pfcand", partial(self.get_matched_pfCands, match_object="Jet_select", dR=0.4))
         selector.set_column("Jet_select", self.set_jet_dxy)
         selector.add_cut("mt_muon2", self.mt_muon_cut)
+
+        selector.add_cut("has_more_two_loose-jets", self.has_more_two_jets)
 
         selector.add_cut("two_loose_jets", self.has_two_jets)
         
@@ -223,6 +229,23 @@ class Processor(pepper.ProcessorBasicPhysics):
             weight[in_hem & issue_period] = 0.0
         return weight
     
+    @zero_handler
+    def b_tagged_jet_cut(self, data, name="Jet"):
+        jets = data[name]
+        # Jet_btagDeepFlavB satisfies the Medium (>0.2783) WP:
+        # https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL18
+        # b_tagged_idx = (jets.btagDeepFlavB > 0.2783)
+        year = self.config["year"]
+        tagger = "deepjet"
+        wp = "medium"
+        wptuple = pepper.scale_factors.BTAG_WP_CUTS[tagger][year]
+        if not hasattr(wptuple, wp):
+            raise pepper.config.ConfigError(
+                "Invalid working point \"{}\" for {} in year {}".format(
+                    wp, tagger, year))
+        b_tagged_idx = jets["btagDeepFlavB"] > getattr(wptuple, wp)
+        return ak.num(jets[b_tagged_idx], axis=1) == 0
+
     @zero_handler
     def lead_pass_trigger(self, data):
         lead_muons = data["Muon_tag"][:,:1]
@@ -379,6 +402,14 @@ class Processor(pepper.ProcessorBasicPhysics):
         matches_h, dRlist = jets.nearest(data["Muon_tag"], return_metric=True, threshold=self.config["tag_muon_veto_dR"])
         isoJets = jets[ak.is_none(matches_h, axis=-1)]
         return isoJets
+    
+    @zero_handler
+    def jet_veto_drop(self, data):
+        jets = data["Jet_select"]
+        map_veto = self.config["jet_veto_map"]
+        mask_per_jet = map_veto(eta=jets.eta, phi=jets.phi)
+        jets = jets[mask_per_jet < 1]
+        return jets
     
     @zero_handler
     def pfcand_valid(self, data):

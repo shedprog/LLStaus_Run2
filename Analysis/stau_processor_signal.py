@@ -106,7 +106,7 @@ class Processor(pepper.ProcessorBasicPhysics):
             self.config["dataset_trigger_order"])
         selector.add_cut("Trigger", partial(
             self.passing_trigger, pos_triggers, neg_triggers))
-        
+
         if is_mc and ( dsname.startswith("DYJetsToLL_M-50") or \
                     dsname.startswith("DY1JetsToLL_M-50") or \
                     dsname.startswith("DY2JetsToLL_M-50") or \
@@ -194,7 +194,7 @@ class Processor(pepper.ProcessorBasicPhysics):
         # this "Jet" jets are not used for MET, only for further selection steps ->
         # this is not needed but in order to keep the same structure as in the original code
         selector.set_column("Jet", partial(self.build_jet_column, is_mc))
-
+        selector.add_cut("no_b_tagged_jets", partial(self.b_tagged_jet_cut, name="Jet"))
         # if "jet_puid_sf" in self.config and is_mc:
         #     selector.add_cut("JetPUIdSFs", self.jet_puid_sfs)
         # selector.set_column("Jet", self.jets_with_puid)
@@ -402,14 +402,15 @@ class Processor(pepper.ProcessorBasicPhysics):
     def MET_trigger_sfs(self, data, met_name="MET"):
         met_pt = data[met_name].pt
         scale_factors = self.config["MET_trigger_sfs"]
+        met_thr = self.config["MET_trigger_plateau"]
         sfs = scale_factors(pt=met_pt)
         systematics = {}
         if self.config["compute_systematics"]:
             sfs_up = scale_factors(variation="up", pt=met_pt)
             sfs_down = scale_factors(variation="down", pt=met_pt)
             # ratio of the up/down to nominal and for 120-250 GeV - 2x stat. unc. of the MET_trigger_sfs is used, for > 250 - 1x stat. unc.
-            systematics["MET_trigger_sfs_up"] = ak.where(met_pt > 250, sfs_up / sfs, 2 * sfs_up / sfs)
-            systematics["MET_trigger_sfs_down"] = ak.where(met_pt > 250, sfs_down / sfs, 2 * sfs_down / sfs)
+            systematics["MET_trigger_sfs_up"] = ak.where(met_pt > met_thr, sfs_up / sfs, 2 * sfs_up / sfs)
+            systematics["MET_trigger_sfs_down"] = ak.where(met_pt > met_thr, sfs_down / sfs, 2 * sfs_down / sfs)
         return sfs, systematics
     
     @zero_handler
@@ -701,13 +702,16 @@ class Processor(pepper.ProcessorBasicPhysics):
 
     
     @zero_handler
-    def b_tagged_jet_cut(self, data):
+    def b_tagged_jet_cut(self, data, name="Jet"):
         # To leading jets are excluded! 
-        jet_not_signal = data["Jet_select"][:,2:]
+        jets = data[name]
         # Jet_btagDeepFlavB satisfies the Medium (>0.2783) WP:
         # https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL18
-        b_tagged_idx = (jet_not_signal.btagDeepFlavB > 0.2783)
-        return ak.num(jet_not_signal[b_tagged_idx]) == 0
+        # b_tagged_idx = (jet_not_signal.btagDeepFlavB > 0.2783)
+        # return ak.num(jet_not_signal[b_tagged_idx], axis=-1) == 0
+        # print(jets.btagged)
+        # print(ak.num(jets[jets.btagged], axis=1))
+        return ak.num(jets[jets.btagged], axis=1) == 0
     
     @zero_handler
     def set_njets_pass(self, data):

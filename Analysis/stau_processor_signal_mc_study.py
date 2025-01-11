@@ -67,6 +67,10 @@ class Processor(pepper.ProcessorBasicPhysics):
             self.config["dataset_trigger_order"])
         selector.add_cut("Trigger", partial(
             self.passing_trigger, pos_triggers, neg_triggers))
+
+        # run era
+        selector.set_cat("run_era",{"B","C","D","E","F"})
+        selector.set_multiple_columns(self.run_era_2017)
         
         if is_mc and ( dsname.startswith("DYJetsToLL_M-50") or \
                     dsname.startswith("DY1JetsToLL_M-50") or \
@@ -182,6 +186,30 @@ class Processor(pepper.ProcessorBasicPhysics):
 
         selector.add_cut("dphi_min_cut", self.dphi_min_cut)
         selector.add_cut("ht_cut", self.ht_cut)
+
+    def run_era_2017(self, data):
+        
+        runs = data.run
+        # era_periods = np.empty(len(runs), dtype=str)
+        # era_periods[runs < 299337] = "B"
+        # era_periods[(runs >= 299337) & (runs < 302030)] = "C"
+        # era_periods[(runs >= 302030) & (runs < 303434)] = "D"
+        # era_periods[(runs >= 303434) & (runs < 304798)] = "E"
+        # era_periods[runs >= 304798] = "F"
+        period_B = (runs < 299337)
+        period_C = (runs >= 299337) & (runs < 302030)
+        period_D = (runs >= 302030) & (runs < 303434)
+        period_E = (runs >= 303434) & (runs < 304798)
+        period_F = (runs >= 304798)
+
+        
+        return {
+            "B" : period_B,
+            "C" : period_C,
+            "D" : period_D,
+            "E" : period_E,
+            "F" : period_F
+        }
 
     @zero_handler
     def ht_cut(self, data):
@@ -319,7 +347,7 @@ class Processor(pepper.ProcessorBasicPhysics):
         jets = data["Jet"]
 
         jets_forward = jets[(abs(jets.eta) > 2.65) & (abs(jets.eta) < 3.139)]
-        print(jets_forward)
+        # print(jets_forward)
         HT_forward = ak.sum(jets_forward.pt, axis=-1)
 
         uncorrect_pt = jets_forward.pt * (1 - jets_forward.rawFactor)
