@@ -119,6 +119,9 @@ void setTDRStyle() {
   tdrStyle->SetTitleYOffset(1.25);
   // tdrStyle->SetTitleOffset(1.1, "Y"); // Another way to set the Offset
 
+// shift the number of exponential
+  tdrStyle->SetExponentOffset(-0.07, 0.0);
+
 // For the axis labels:
 
   tdrStyle->SetLabelColor(1, "XYZ");

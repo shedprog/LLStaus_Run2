@@ -30,8 +30,9 @@ def plot_predict_sys(dirname, config, xsec, cutflow, output_path):
             hist.SetBinError(hist.GetNbinsX(), np.sqrt(hist.GetBinError(hist.GetNbinsX())**2+hist.GetBinError(hist.GetNbinsX()+1)**2))
         return hist
     
-    systematics = ["stat_up","stat_down", "sys_up", "sys_down"]
     include_sys = True
+    systematics_pred = config["systematics_pred"]
+    systematics_mc = config["systematics_mc"]
     
     for prediction_bin, data_bin in zip(config["prediction_hist"]["predictions"], config["prediction_hist"]["bin_data"]):
         for hist in config["prediction_hist"]["hists"]:
@@ -50,7 +51,7 @@ def plot_predict_sys(dirname, config, xsec, cutflow, output_path):
             print(path_predict)
             file_predict = ROOT.TFile.Open(path_predict, 'read')
             hist_prediction = None
-            hist_prediction_sys = {sys:None for sys in systematics}
+            hist_prediction_sys = {sys: {direction: None for direction in systematics_pred[sys]} for sys in systematics_pred}
             for data_group in config["Data"].keys():
                 for data_name in config["Labels"][data_group]:
 
@@ -61,40 +62,52 @@ def plot_predict_sys(dirname, config, xsec, cutflow, output_path):
                         hist_prediction.Add(_hist_predict)
                         
                     if include_sys:
-                        for sys in systematics:
-                            _hist_predict_sys = read_hist(file_predict, data_name, sys)
-                            if hist_prediction_sys[sys] == None:
-                                hist_prediction_sys[sys] = _hist_predict_sys
-                            else:
-                                hist_prediction_sys[sys].Add(_hist_predict_sys)
+                        for sys in systematics_pred:
+                            for direction in systematics_pred[sys]:
+                                _hist_predict_sys = read_hist(file_predict, data_name, systematics_pred[sys][direction])
+                                if hist_prediction_sys[sys][direction] is None:
+                                    hist_prediction_sys[sys][direction] = _hist_predict_sys
+                                else:
+                                    hist_prediction_sys[sys][direction].Add(_hist_predict_sys)
+
                                 
             hist_prediction = rebin_hist(hist_prediction, rebin_setup, overflow)
             if include_sys:
-                for sys in systematics:
-                    hist_prediction_sys[sys] = rebin_hist(hist_prediction_sys[sys], rebin_setup, overflow)
-                
+                for sys in systematics_pred:
+                    for direction in systematics_pred[sys]:
+                        hist_prediction_sys[sys][direction] = rebin_hist(hist_prediction_sys[sys][direction], rebin_setup, overflow)
+                        
             # calculate sum of the difference between the nominal and the systematic histograms
             if include_sys:
-                for sys in systematics:
-                    hist_prediction_sys[sys].Add(hist_prediction, -1)
-                up_error = np.zeros(hist_prediction.GetNbinsX()+2) # create also for the underflow and overflow 
-                down_error = np.zeros(hist_prediction.GetNbinsX()+2) # create also for the underflow and overflow
-                for bin_i in range(0, hist_prediction.GetNbinsX()+2):
-                    down_error[bin_i] = up_error[bin_i] = hist_prediction.GetBinError(bin_i)**2
-                    # for upper error
-                    up_error[bin_i] += sum([hist_prediction_sys[sys].GetBinContent(bin_i)**2 for sys in systematics if hist_prediction_sys[sys].GetBinContent(bin_i) > 0])
-                    down_error[bin_i] += sum([hist_prediction_sys[sys].GetBinContent(bin_i)**2 for sys in systematics if hist_prediction_sys[sys].GetBinContent(bin_i) < 0])
-                    up_error[bin_i] = np.sqrt(up_error[bin_i])
-                    down_error[bin_i] = np.sqrt(down_error[bin_i])
-                
+                up_error = np.zeros(hist_prediction.GetNbinsX() + 2)  # create also for the underflow and overflow
+                down_error = np.zeros(hist_prediction.GetNbinsX() + 2)  # create also for the underflow and overflow
+                for bin_i in range(0, hist_prediction.GetNbinsX() + 2):
+                    down_error[bin_i] = up_error[bin_i] = hist_prediction.GetBinError(bin_i) ** 2
+                    # sum up "up" and "down" variations if they have possitive shifts
+                    delta_up_sum = 0
+                    delta_down_sum = 0
+                    
+                    for sys in systematics_pred:
+                        delta_up = hist_prediction_sys[sys]["up"].GetBinContent(bin_i) - hist_prediction.GetBinContent(bin_i)
+                        delta_down = hist_prediction_sys[sys]["down"].GetBinContent(bin_i) - hist_prediction.GetBinContent(bin_i)
+                        
+                        if delta_up > 0: delta_up_sum += delta_up ** 2
+                        else: delta_down_sum += delta_up ** 2
+                        
+                        if delta_down < 0: delta_down_sum += delta_down ** 2
+                        else: delta_up_sum += delta_down ** 2
+                    
+                    up_error[bin_i] = np.sqrt( delta_up_sum )
+                    down_error[bin_i] = np.sqrt( delta_down_sum )
+
                 # Create TGraphAsymmErrors
                 prediction_gr = ROOT.TGraphAsymmErrors(hist_prediction.GetNbinsX())
-                for bin_i in range(0, hist_prediction.GetNbinsX()+2):
+                for bin_i in range(0, hist_prediction.GetNbinsX() + 2):
                     prediction_gr.SetPoint(bin_i, hist_prediction.GetBinCenter(bin_i), hist_prediction.GetBinContent(bin_i))
                     prediction_gr.SetPointEYhigh(bin_i, up_error[bin_i])
                     prediction_gr.SetPointEYlow(bin_i, down_error[bin_i])
-                    prediction_gr.SetPointEXhigh(bin_i, hist_prediction.GetBinWidth(bin_i)/2)
-                    prediction_gr.SetPointEXlow(bin_i, hist_prediction.GetBinWidth(bin_i)/2)
+                    prediction_gr.SetPointEXhigh(bin_i, hist_prediction.GetBinWidth(bin_i) / 2)
+                    prediction_gr.SetPointEXlow(bin_i, hist_prediction.GetBinWidth(bin_i) / 2)
             else:
                 prediction_gr = None
                 
@@ -150,6 +163,7 @@ def plot_predict_sys(dirname, config, xsec, cutflow, output_path):
             if config["prediction_hist"]["plot_signal"]:
                 for _group_idx, _group_name in enumerate(config["Signal_samples"]):
                     # Accumulate the dataset for the particular data group as specified in config "Labels".
+                    hist_signal_sys = {sys: {direction: None for direction in systematics_mc[sys]} for sys in systematics_mc}
                     for _dataset_idx, _histogram_data in enumerate(config["Labels"][_group_name]):
                         print("Adding signal dataset:", _histogram_data)
                         _hist = read_hist(file_n_pass_sig, _histogram_data, "nominal/"+data_bin)
@@ -159,12 +173,56 @@ def plot_predict_sys(dirname, config, xsec, cutflow, output_path):
                             _hist.SetBinContent(bin_i, _hist.GetBinContent(bin_i)*scale)
                             _hist.SetBinError(bin_i, _hist.GetBinError(bin_i)*scale)
                             # add 20% uncertainty to the signal:
-                            error = np.sqrt(_hist.GetBinError(bin_i)**2 + (_hist.GetBinContent(bin_i)*0.2)**2)
-                            _hist.SetBinError(bin_i, error)
+                            # error = np.sqrt(_hist.GetBinError(bin_i)**2 + (_hist.GetBinContent(bin_i)*0.2)**2)
+                            # _hist.SetBinError(bin_i, error)
                         if _dataset_idx == 0:
                             signal_hists.append(_hist)
                         else:
                             signal_hists[-1].Add(_hist)
+                        
+                        if include_sys:
+                            for sys in systematics_mc:
+                                for direction in systematics_mc[sys]:
+                                    _hist_sys = read_hist(file_n_pass_sig, _histogram_data, systematics_mc[sys][direction]+"/"+data_bin)
+                                    for bin_i in range(0, _hist_sys.GetNbinsX()+2):
+                                        _hist_sys.SetBinContent(bin_i, _hist_sys.GetBinContent(bin_i)*scale)
+                                        _hist_sys.SetBinError(bin_i, _hist_sys.GetBinError(bin_i)*scale)
+                                    if hist_signal_sys[sys][direction] is None:
+                                        hist_signal_sys[sys][direction] = _hist_sys
+                                    else:
+                                        hist_signal_sys[sys][direction].Add(_hist_sys)
+                        
+                    if include_sys:
+                        for sys in systematics_mc:
+                            for direction in systematics_mc[sys]:
+                                hist_signal_sys[sys][direction] = rebin_hist(hist_signal_sys[sys][direction], rebin_setup, overflow)
+
+        
+                        
+                        for bin_i in range(0, signal_hists[-1].GetNbinsX() + 2):
+                            down_error = up_error = signal_hists[-1].GetBinError(bin_i) ** 2
+                            # sum up "up" and "down" variations if they have possitive shifts
+                            delta_up_sum = 0
+                            delta_down_sum = 0
+                            
+                            for sys in systematics_mc:
+                                delta_up = hist_signal_sys[sys]["up"].GetBinContent(bin_i) - signal_hists[-1].GetBinContent(bin_i)
+                                delta_down = hist_signal_sys[sys]["down"].GetBinContent(bin_i) - signal_hists[-1].GetBinContent(bin_i)
+                                
+                                if delta_up > 0: delta_up_sum += delta_up ** 2
+                                else: delta_down_sum += delta_up ** 2
+                                
+                                if delta_down < 0: delta_down_sum += delta_down ** 2
+                                else: delta_up_sum += delta_down ** 2
+                            
+                            up_error = np.sqrt( delta_up_sum )
+                            down_error = np.sqrt( delta_down_sum )
+                            
+                            # symetrize the errors as squire root of the sum of the squares
+                            error = np.sqrt( up_error ** 2 + down_error ** 2 )    
+                            
+                            signal_hists[-1].SetBinError(bin_i, error)
+                                    
                     signal_hists[-1] = rebin_hist(signal_hists[-1], rebin_setup, overflow)
                     color_setup = config["Signal_samples"][_group_name]  
                     line_color = color_setup[1]
@@ -185,6 +243,9 @@ def plot_predict_sys(dirname, config, xsec, cutflow, output_path):
             else:
                 x_axis_title = bin_labels
             
+            year = config["year"]
+            lumi = config["luminosity"]
+           
             root_plot1D(
                 l_hist = hists_main,
                 l_hist_overlay = signal_hists,
@@ -211,11 +272,13 @@ def plot_predict_sys(dirname, config, xsec, cutflow, output_path):
                 legendpos = "UL",
                 legendtitle = f"",
                 legendncol = 2,
-                legendtextsize = 0.040,
+                legendtextsize = 0.030,
                 legendwidthscale = 2.0,
                 legendheightscale = 4.0,
-                lumiText = "(13 TeV)",
-                CMSextraText = "Private work",
+                # lumiText = "(13 TeV)",
+                lumiText = f"{year}, {lumi} fb^{'{'}-1{'}'}",
+                CMSextraText = "Private Work",
+                # CMSextraText = "",
                 yrange_ratio = (0.0, 2.0),
                 ndivisionsy_ratio = (5, 5, 0),
                 signal_to_background_ratio = True,
@@ -489,8 +552,9 @@ def plot_predict(dirname, config, xsec, cutflow, output_path):
                 legendwidthscale = 2.0,
                 legendheightscale = 4.0,
                 # lumiText = f"{year}, {lumi} fb^{-1} (13 TeV)",
+                lumiText = f"{year}, {lumi} fb^{'{'}-1{'}'}",
                 CMSextraText = "Private work",
-                lumiText = "(13 TeV)",
+                # lumiText = "(13 TeV)",
                 yrange_ratio = (0.0, 2.0),
                 ndivisionsy_ratio = (5, 5, 0),
                 signal_to_background_ratio = True,
@@ -725,16 +789,19 @@ def plot1D(histfiles, histnames, config, xsec, cutflow, output_path, isData):
                                 "DY3JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8" in _histogram_data or
                                 "DY4JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8" in _histogram_data ):
                             print("Stitching:", _histogram_data)
+                            # lo_div_nlo = 6077.22/6233.55
                             hist.Scale(config["luminosity"])
                             # hist.Scale(0.94) # normalisation factor (measured in Z->mumu region) = 0.87
                             print(_histogram_data, hist.Integral())
+                            
                             # if some of the MC give zero contribution in bin one-sided Poisson error is used
-                            if not config["include_systematics"]:
-                                for i in range(0, hist.GetNbinsX() + 2):
-                                    if hist.GetBinContent(i) == 0:
-                                        N = cutflow[_histogram_data]["all"]["BeforeCuts"]
-                                        alpha = (xsec[_histogram_data] * config["luminosity"]) / N
-                                        hist.SetBinError(i, -np.log((1 - 0.6827)/2) * alpha)
+                            # if not config["include_systematics"]:
+                            #     for i in range(0, hist.GetNbinsX() + 2):
+                            #         if hist.GetBinContent(i) == 0:
+                            #             N = cutflow[_histogram_data]["all"]["BeforeCuts"]
+                            #             alpha = (xsec[_histogram_data] * config["luminosity"]) / N
+                            #             hist.SetBinError(i, -np.log((1 - 0.6827)/2) * alpha)
+                            
                             # for i in range(0, hist.GetNbinsX() + 2):
                             #     hist.SetBinError(i, 
                             #         np.sqrt(hist.GetBinError(i)**2 + (0.15 * hist.GetBinContent(i))**2)
@@ -823,11 +890,13 @@ def plot1D(histfiles, histnames, config, xsec, cutflow, output_path, isData):
                     print("Set title:", _group_name)
             # exit()
             # get maximum for the y-scale
-            y_max = _histograms["background"][0].GetMaximum()
-            for _h in _histograms["background"]:
-                y_max = max(y_max,_h.GetMaximum())
+            y_max = 0
+            if not _histograms["background"].__len__() == 0:
+                y_max = _histograms["background"][0].GetMaximum()
+                for _h in _histograms["background"]:
+                    y_max = max(y_max,_h.GetMaximum())
             # define y_max from data
-            if isData:
+            if not _histograms["data"].__len__() == 0:
                 y_max = max(y_max,_histograms["data"][0].GetMaximum())
 
             # sort histogram from min to max
@@ -852,7 +921,10 @@ def plot1D(histfiles, histnames, config, xsec, cutflow, output_path, isData):
                 overflow =  True
             
             # get bin width
-            bin_width = round(_histograms["background"][0].GetXaxis().GetBinWidth(1), 4)
+            if not _histograms["background"].__len__() == 0:
+                bin_width = round(_histograms["background"][0].GetXaxis().GetBinWidth(1), 4)
+            else:
+                bin_width = round(_histograms["data"][0].GetXaxis().GetBinWidth(1), 4)
 
             year = config["year"]
             lumi = config["luminosity"]
@@ -887,14 +959,14 @@ def plot1D(histfiles, histnames, config, xsec, cutflow, output_path, isData):
                     legendtextsize = 0.037,
                     legendwidthscale = 1.9,
                     legendheightscale = 0.46,
-                    lumiText = f"{year}, {lumi} fb^{-1} (13 TeV)",
+                    lumiText = f"{year}, {lumi} fb^{'{'}-1{'}'}",
                     signal_to_background_ratio = True,
                     ratio_mode = "DATA",
-                    CMSextraText = "Preliminary",
-                    ndivisionsy_ratio = (4, 2, 0),
-                    # ndivisionsy_ratio = (5, 5, 0),
+                    CMSextraText = "Internal",
+                    # ndivisionsy_ratio = (4, 2, 0),
+                    ndivisionsy_ratio = (4, 5, 0),
                     yrange_ratio = (0.0, 2.0),
-                    # yrange_ratio = (0.5, 1.5),
+                    # yrange_ratio = (0.0, 1.2),
                     draw_errors = True
                 )
             
@@ -902,17 +974,20 @@ def plot1D(histfiles, histnames, config, xsec, cutflow, output_path, isData):
                 root_plot1D(
                     l_hist = _histograms_background_sorted,
                     l_hist_overlay = _histograms["signal"],
+                    # l_hist = _histograms["data"],
+                    # l_hist_overlay = _histograms["signal"],
                     outfile = output + "/" + os.path.splitext(os.path.basename(_histfile))[0] + ".png",
                     xrange = [xrange_min, xrange_max],
-                    yrange = (0.001,  1000*y_max),
-                    # yrange = (0.0,  1.5*y_max),
+                    # yrange = (0.0,  2.0*y_max), 
+                    # logx = False, logy = False,
+                    yrange = (0.01,  100*y_max),
                     logx = False, logy = True,
-                    logx_ratio = False, logy_ratio = True,
+                    logx_ratio = False, logy_ratio = False,
                     include_overflow = overflow,
-                    xtitle = _histograms["background"][0].GetXaxis().GetTitle(),
-                    ytitle = "Events",
-                    xtitle_ratio = _histograms["background"][0].GetXaxis().GetTitle(),
-                    ytitle_ratio = "S/#sqrt{S+B}",
+                    xtitle = _histograms["data"][0].GetXaxis().GetTitle(),
+                    ytitle = f"Events / {bin_width} {units}",
+                    xtitle_ratio = _histograms["data"][0].GetXaxis().GetTitle(),
+                    ytitle_ratio = "DATA / MC",
                     centertitlex = True, centertitley = True,
                     centerlabelx = False, centerlabely = False,
                     gridx = True, gridy = True,
@@ -923,15 +998,52 @@ def plot1D(histfiles, histnames, config, xsec, cutflow, output_path, isData):
                     legendpos = "UL",
                     legendtitle = f"",
                     legendncol = 3,
-                    legendtextsize = 0.025,
+                    legendtextsize = 0.015,
                     legendwidthscale = 2.1,
                     legendheightscale = 0.46,
-                    lumiText = "(13 TeV)",
-                    signal_to_background_ratio = True,
-                    ratio_mode = "SB",
-                    yrange_ratio = (0.1, 1E5),
-                    draw_errors = False
+                    lumiText = f"{year}, {lumi} fb^{-1} (13 TeV)",
+                    signal_to_background_ratio = False,
+                    ratio_mode = "DATA",
+                    CMSextraText = "Internal",
+                    # ndivisionsy_ratio = (4, 2, 0),
+                    ndivisionsy_ratio = (4, 5, 0),
+                    yrange_ratio = (0.0, 2.0),
+                    # yrange_ratio = (0.0, 1.2),
+                    draw_errors = True
                 )
+                # root_plot1D(
+                #     l_hist = _histograms_background_sorted,
+                #     l_hist_overlay = _histograms["signal"],
+                #     outfile = output + "/" + os.path.splitext(os.path.basename(_histfile))[0] + ".png",
+                #     xrange = [xrange_min, xrange_max],
+                #     yrange = (0.001,  1000*y_max),
+                #     # yrange = (0.0,  1.5*y_max),
+                #     logx = False, logy = True,
+                #     logx_ratio = False, logy_ratio = True,
+                #     include_overflow = overflow,
+                #     xtitle = _histograms["background"][0].GetXaxis().GetTitle(),
+                #     ytitle = "Events",
+                #     xtitle_ratio = _histograms["background"][0].GetXaxis().GetTitle(),
+                #     ytitle_ratio = "S/#sqrt{S+B}",
+                #     centertitlex = True, centertitley = True,
+                #     centerlabelx = False, centerlabely = False,
+                #     gridx = True, gridy = True,
+                #     ndivisionsx = None,
+                #     stackdrawopt = "",
+                #     # normilize = True,
+                #     normilize_overlay = False,
+                #     legendpos = "UL",
+                #     legendtitle = f"",
+                #     legendncol = 3,
+                #     legendtextsize = 0.025,
+                #     legendwidthscale = 2.1,
+                #     legendheightscale = 0.46,
+                #     lumiText = "(13 TeV)",
+                #     signal_to_background_ratio = True,
+                #     ratio_mode = "SB",
+                #     yrange_ratio = (0.1, 1E5),
+                #     draw_errors = False
+                # )
 
 def doQCDprediction(histfiles, histnames, config, xsec, cutflow, output_path, isData,  histfile_json):
 

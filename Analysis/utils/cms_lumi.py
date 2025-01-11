@@ -6,7 +6,8 @@ import ROOT as rt
 #   Updated by:   Dinko Ferencek (Rutgers)
 #
 
-cmsText     = "CMS";
+cmsText     = "CMS"
+# cmsText     = ""
 cmsTextFont   = 61  
 
 writeExtraText = True
