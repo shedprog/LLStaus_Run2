@@ -943,15 +943,31 @@ class Processor(pepper.ProcessorBasicPhysics):
         mt2 = data["mt2_j1_j2_MET"]
         # create empty binning
         bins = np.full((len(met)), np.nan)
-        B1 = (jet2_pt < 50) & (met >= 250)
-        B2 = (jet2_pt < 50) & (met < 250) & (mt2 < 100)
-        B3 = (jet2_pt < 50) & (met < 250) & (mt2 >= 100)
-        B4 = (jet2_pt >= 50) & (jet2_pt < 100)
-        B5 = (jet2_pt >= 100)
+        # B1 = (jet2_pt < 50) & (met >= 250)
+        # B2 = (jet2_pt < 50) & (met < 250) & (mt2 < 100)
+        # B3 = (jet2_pt < 50) & (met < 250) & (mt2 >= 100)
+        # B4 = (jet2_pt >= 50) & (jet2_pt < 100)
+        # B5 = (jet2_pt >= 100)
+        # bins[B1] = 1
+        # bins[B2] = 2
+        # bins[B3] = 3
+        # bins[B4] = 4
+        # bins[B5] = 5
+        B1 = (jet2_pt < 50) & (met < 250) & (mt2 < 100)
+        B2 = (jet2_pt < 50) & (met < 250) & (mt2 >= 100)
+        B3 = (jet2_pt < 50) & (met >= 250)
+        B4 = (jet2_pt >= 50) & (jet2_pt < 100) & (met < 250) & (mt2 < 100)
+        B5 = (jet2_pt >= 50) & (jet2_pt < 100) & (met < 250) & (mt2 >= 100)
+        B6 = (jet2_pt >= 50) & (jet2_pt < 100) & (met >= 250)
+        B7 = (jet2_pt >= 100) & (mt2 < 100)
+        B8 = (jet2_pt >= 100) & (mt2 >= 100)
         bins[B1] = 1
         bins[B2] = 2
         bins[B3] = 3
         bins[B4] = 4
         bins[B5] = 5
+        bins[B6] = 6
+        bins[B7] = 7
+        bins[B8] = 8
 
         return bins

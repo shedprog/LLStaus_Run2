@@ -7,54 +7,54 @@
     "store": "/pnfs/desy.de/cms/tier2/store/user/sobhatta/LongLivedStaus/NanoAOD/2017/",
     "rng_seed_file": "$CONFDIR/../seed.txt",
     "compute_systematics": false,
-    "luminosity": 41.4,
+    "luminosity": 41.5,
     "crosssections": "$CONFDIR/../crosssections.json",
     "apply_met_filters": true,
     "predict_yield" : false,
     "flavour_fake_rate_study" : false, // all other analysis tools will be disabled
     "exp_datasets": {
         "SingleMuon": [
-            "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017B_UL/240710_010749/*/*.root"
-            "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017C_UL/240710_010755/*/*.root"
-            "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017D_UL/240710_010802/*/*.root"
-            "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017E_UL/240710_010808/*/*.root"
+            "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017B_UL/240710_010749/*/*.root",
+            "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017C_UL/240710_010755/*/*.root",
+            "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017D_UL/240710_010802/*/*.root",
+            "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017E_UL/240710_010808/*/*.root",
             "$STOREDIR/SingleMuon/crab_SingleMuon_Run2017F_UL/240710_010814/*/*.root"
             ]
     },
     "mc_datasets": {
 
-        "WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8"  : [ "$STOREDIR/WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
-        "W1JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8" : [ "$STOREDIR/W1JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
-        "W2JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8" : [ "$STOREDIR/W2JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
-        "W3JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8" : [ "$STOREDIR/W3JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
-        "W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8" : [ "$STOREDIR/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8"  : [ "$STOREDIR/WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "W1JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8" : [ "$STOREDIR/W1JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "W2JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8" : [ "$STOREDIR/W2JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "W3JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8" : [ "$STOREDIR/W3JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8" : [ "$STOREDIR/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
 
-        "DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
-        "DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
-        "DY2JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DY2JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
-        "DY3JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DY3JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
-        "DY4JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DY4JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DY1JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "DY2JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DY2JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "DY3JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DY3JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
+        // "DY4JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8": ["$STOREDIR/DY4JetsToLL_M-50_MatchEWPDG20_TuneCP5_13TeV-madgraphMLM-pythia8/*/*/*/*.root" ],
 
-        "ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
-        "ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
-        "ST_t-channel_antitop_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8" : [ "$STOREDIR/ST_t-channel_antitop_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8/*/*/*/*.root", ],
-        "ST_t-channel_top_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8" : [ "$STOREDIR/ST_t-channel_top_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8/*/*/*/*.root", ],
+        // "ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
+        // "ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
+        // "ST_t-channel_antitop_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8" : [ "$STOREDIR/ST_t-channel_antitop_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8/*/*/*/*.root", ],
+        // "ST_t-channel_top_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8" : [ "$STOREDIR/ST_t-channel_top_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8/*/*/*/*.root", ],
   
-        "TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
-        "TTToHadronic_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
-        "TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
+        // "TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
+        // "TTToHadronic_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
+        // "TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8" : [ "$STOREDIR/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/*/*/*/*.root", ],
         
-        "TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8" : [ "$STOREDIR/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8/*/*/*/*.root", ],
-        "TTWJetsToQQ_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8" : [ "$STOREDIR/TTWJetsToQQ_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8/*/*/*/*.root", ],
-        "TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8" : [ "$STOREDIR/TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8/*/*/*/*.root", ],
-        "TTZToQQ_TuneCP5_13TeV-amcatnlo-pythia8" : [ "$STOREDIR/TTZToQQ_TuneCP5_13TeV-amcatnlo-pythia8/*/*/*/*.root", ],
+        // "TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8" : [ "$STOREDIR/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8/*/*/*/*.root", ],
+        // "TTWJetsToQQ_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8" : [ "$STOREDIR/TTWJetsToQQ_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8/*/*/*/*.root", ],
+        // "TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8" : [ "$STOREDIR/TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8/*/*/*/*.root", ],
+        // "TTZToQQ_TuneCP5_13TeV-amcatnlo-pythia8" : [ "$STOREDIR/TTZToQQ_TuneCP5_13TeV-amcatnlo-pythia8/*/*/*/*.root", ],
 
-        "WW_TuneCP5_13TeV-pythia8": ["$STOREDIR/WW_TuneCP5_13TeV-pythia8/*/*/*/*.root"],
-        "WZ_TuneCP5_13TeV-pythia8": ["$STOREDIR/WZ_TuneCP5_13TeV-pythia8/*/*/*/*.root"],
-        "ZZ_TuneCP5_13TeV-pythia8": ["$STOREDIR/ZZ_TuneCP5_13TeV-pythia8/*/*/*/*.root"],
+        // "WW_TuneCP5_13TeV-pythia8": ["$STOREDIR/WW_TuneCP5_13TeV-pythia8/*/*/*/*.root"],
+        // "WZ_TuneCP5_13TeV-pythia8": ["$STOREDIR/WZ_TuneCP5_13TeV-pythia8/*/*/*/*.root"],
+        // "ZZ_TuneCP5_13TeV-pythia8": ["$STOREDIR/ZZ_TuneCP5_13TeV-pythia8/*/*/*/*.root"],
 
-        "WWW_4F_TuneCP5_13TeV-amcatnlo-pythia8" : ["$STOREDIR/WWW_4F_TuneCP5_13TeV-amcatnlo-pythia8/*/*/*/*.root",],
-        "WWZ_4F_TuneCP5_13TeV-amcatnlo-pythia8" : ["$STOREDIR/WWZ_4F_TuneCP5_13TeV-amcatnlo-pythia8/*/*/*/*.root",],
+        // "WWW_4F_TuneCP5_13TeV-amcatnlo-pythia8" : ["$STOREDIR/WWW_4F_TuneCP5_13TeV-amcatnlo-pythia8/*/*/*/*.root",],
+        // "WWZ_4F_TuneCP5_13TeV-amcatnlo-pythia8" : ["$STOREDIR/WWZ_4F_TuneCP5_13TeV-amcatnlo-pythia8/*/*/*/*.root",],
         
         
     },
@@ -110,10 +110,22 @@
         ]
     ],
 
+    "DY_ZptLO_weights": [
+        "$DATADIR/zptmass_weights_UL2017.root",
+        "zptmass_weight",
+        ["pt", "mass"]
+    ],
+
     "jet_fake_rate" : [
         "/afs/desy.de/user/m/mykytaua/nfscms/softLLSTAU/LLStaus_Run2/Analysis/output_iteration_4/2017/output_wjet/wjet_v1_fake/fake_rate_ext/fake_rate_jet_dxy_pt.root",
         "fake_rate_jet_dxy_pt",
         ["jet_pt", "jet_dxy"]
+    ],
+
+    "jet_veto_map" : [
+        "$DATADIR/hotjets-UL17_v2.root",
+        "h2hot_ul17_plus_hep17_plus_hbpw89",
+        ["eta", "phi"]
     ],
 
     // tag muon:
@@ -152,8 +164,9 @@
     "jet_eta_max"  :  2.1,
     "jet_jetId"    :  6, // tight lepton veto
     "tag_muon_veto_dR" :  0.4,
-    "jet_dxy_min"  :  0.5, // cm
+    "jet_dxy_min"  :  0.2, // cm
     "dphi_j1j2"    :  0.5,
+    "b-veto"       : false,
 
     // pfCand selection:
     "pfcand_pt"         : 1.0,
@@ -169,11 +182,11 @@
 
     "hists": "$CONFDIR/../hists_configs/wjets_hist.json",
 
-    // "cuts_to_histogram" : [
-    //     "mt_muon",
-    //     "mt_muon2",
-    //     // "has_more_two_jets",
-    //     // "two_loose_jets",
-    //     "two_loose_jets_final"
-    // ]
+    "cuts_to_histogram" : [
+        "mt_muon",
+        "mt_muon2",
+        "has_more_two_jets",
+        "two_loose_jets",
+        "two_loose_jets_final"
+    ]
 }
