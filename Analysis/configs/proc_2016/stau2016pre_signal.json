@@ -316,7 +316,7 @@
     "jet_eta_min"  : -2.1,
     "jet_eta_max"  :  2.1,
     "jet_jetId"    :  6, // tight lepton veto
-    "jet_dxy_min"  :  0.5, // cm
+    "jet_dxy_min"  :  0.2, // cm
     
     // pfCand selection:
     "pfcand_pt"         : 1.0,
