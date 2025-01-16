@@ -89,7 +89,7 @@ class Processor(pepper.ProcessorBasicPhysics):
         else:
             self.propagate_eff_factors = False
 
-    def process_selection(self, selector, dsname, is_mc, filler,):
+    def process_selection(self, selector, dsname, is_mc, filler):
         
         era = self.get_era(selector.data, is_mc)
 
