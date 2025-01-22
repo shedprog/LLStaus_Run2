@@ -87,7 +87,7 @@
         ]
     },
     "jet_fake_rate" : [
-        "/nfs/dust/cms/user/mykytaua/softLLSTAU/LLStaus_Run2/Analysis/output_iteration_4/2016/output_wjet_2016preVFP/wjet_v2_fake/fake_rate_ext/fake_rate_jet_dxy_pt.root",
+        "/data/dust/user/mykytaua/softLLSTAU/LLStaus_Run2/Analysis/output_iteration_4/2016/output_wjet_2016preVFP/wjet_v2_fake/fake_rate_ext/fake_rate_jet_dxy_pt.root",
         "fake_rate_jet_dxy_pt",
         ["jet_pt", "jet_dxy"]
     ],

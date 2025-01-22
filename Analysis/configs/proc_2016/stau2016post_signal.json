@@ -4,7 +4,7 @@
     "file_mode": "local",
     "xrootddomain": "xrootd-cms.infn.it",
     // "bad_file_paths": "",
-    "datadir": "/nfs/dust/cms/user/mykytaua/softLLSTAU/LLStaus_Run2/Analysis/configs/data_UL/ul2016post/",
+    "datadir": "configs/data_UL/ul2016post/",
     "store": "/pnfs/desy.de/cms/tier2/store/user/sobhatta/LongLivedStaus/NanoAOD/2016_postVFP/",
     "rng_seed_file": "$CONFDIR/seed.txt",
     "compute_systematics": true,
@@ -211,7 +211,7 @@
         ["mass", "pt"]
     ],
     "MET_trigger_sfs": [
-        "/nfs/dust/cms/user/sobhatta/work/LongLivedStaus/LLStaus_Run2/Analysis/output/trigger_sf_study/2016_postVFP/trigger-eff-sfs_MET.root",
+        "/data/dust/user/sobhatta/work/LongLivedStaus/LLStaus_Run2/Analysis/output/trigger_sf_study/2016_postVFP/trigger-eff-sfs_MET.root",
         "h1_sf",
         ["pt"]
     ],

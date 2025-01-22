@@ -4,7 +4,7 @@
     "file_mode": "local",
     "xrootddomain": "xrootd-cms.infn.it",
     "bad_file_paths": "$CONFDIR/../nano_v11_bad-pnfs-files.json",
-    "datadir": "/afs/desy.de/user/m/mykytaua/nfscms/softLLSTAU/LLStaus_Run2/Analysis/configs/data_UL/ul2018",
+    "datadir": "configs/data_UL/ul2018",
     "store": "/pnfs/desy.de/cms/tier2/store/user/sobhatta/LongLivedStaus/NanoAOD",
     "rng_seed_file": "$CONFDIR/seed.txt",
     "compute_systematics": true,
@@ -213,7 +213,7 @@
         ["pt", "mass"]
     ],
     "MET_trigger_sfs": [
-        "/nfs/dust/cms/user/sobhatta/work/LongLivedStaus/LLStaus_Run2/Analysis/output/trigger_sf_study/2018/trigger-eff-sfs_MET.root",
+        "/data/dust/user/sobhatta/work/LongLivedStaus/LLStaus_Run2/Analysis/output/trigger_sf_study/2018/trigger-eff-sfs_MET.root",
         "h1_sf",
         ["pt"]
     ],
@@ -253,7 +253,7 @@
 
     // data-driven n-pass yield prediction:
     "jet_fake_rate" : [
-        "/afs/desy.de/user/m/mykytaua/nfscms/softLLSTAU/LLStaus_Run2/Analysis/output_iteration_6/2018/output_wjet/wjet_v4_fake_rate_dxy0p2/fake_rate/fake_rate_jet_dxy_pt.root",
+        "/data/dust/user/mykytaua/nfscms/softLLSTAU/LLStaus_Run2/Analysis/output_iteration_6/2018/output_wjet/wjet_v4_fake_rate_dxy0p2/fake_rate/fake_rate_jet_dxy_pt.root",
         "fake_rate_jet_dxy_pt",
         ["jet_pt", "jet_dxy"]
     ],

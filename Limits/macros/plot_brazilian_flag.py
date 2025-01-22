@@ -9,76 +9,60 @@ import re
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
-# maximally mixed cross section: 
-# stau-mass [GeV] : cross-section [fb]
-theory_xsec = { 
-    50: 943.29,
-    100: 102.77,
-    150: 25.53,
-    200: 9,
-    250: 3.85,
-    300: 1.87,
-    350: 0.99,
-    400: 0.56,
-    450: 0.33,
-    500: 0.2
-}
-
-# mass-degenerate cross section: 
-# stau-mass [GeV] : cross-section [fb]
-# theory_xsec = {
-#     50 : 1000*5.368,     
-#     80 : 1000*0.8014,    
-#     100 : 1000*0.3657,    
-#     120 : 1000*0.1928,    
-#     125 : 1000*0.1669,    
-#     140 : 1000*0.1116,    
-#     150 : 1000*0.08712,   
-#     160 : 1000*0.06896,   
-#     175 : 1000*0.04975,   
-#     180 : 1000*0.04485,   
-#     200 : 1000*0.03031,   
-#     220 : 1000*0.02115,   
-#     225 : 1000*0.01941,   
-#     240 : 1000*0.01514,   
-#     250 : 1000*0.01292,   
-#     260 : 1000*0.01108,   
-#     275 : 1000*0.008875,  
-#     280 : 1000*0.008259,  
-#     300 : 1000*0.006254,  
-#     320 : 1000*0.004802,  
-#     340 : 1000*0.003732,  
-#     360 : 1000*0.002931,  
-#     380 : 1000*0.002325,  
-#     400 : 1000*0.001859,  
-#     440 : 1000*0.001216,  
-#     500 : 1000*0.0006736, 
-#     600 : 1000*0.0002763, 
-#     700 : 1000*0.0001235, 
-#     800 : 1000*5.863E-05, 
-#     900 : 1000*2.918E-05,
-#     1000 : 1000*1.504E-05 
-# }
-# extrapolate liniarly theory mases from 90 with 10 GeV steps
-for i in range(90, 1000, 10):
-    if i not in theory_xsec:
-        # take the closest masses
-        masses_below = [m for m in theory_xsec if m < i]
-        masses_above = [m for m in theory_xsec if m > i]
-        if masses_below and masses_above:
-            mass1 = max(masses_below)
-            mass2 = min(masses_above)
-            xsec1 = theory_xsec[mass1]
-            xsec2 = theory_xsec[mass2]
-            theory_xsec[i] = xsec1 + (xsec2 - xsec1) / (mass2 - mass1) * (i - mass1)
 
 parser = ArgumentParser(description="Plot 1D limits in brazilian flag style")
 parser.add_argument("--input", help="Path to the directory containing the input files in the .json format")
 parser.add_argument("--outdir", help="Output directory. If not given, output to the directory "
                     "where script is located", default='hist_output')
 parser.add_argument("--lifetime", help="Fixed lifetime to filter the JSON files", required=True)
+parser.add_argument("--theory", help="Theory cross section to be plotted, maxmix or massdeg", default='maxmix')
 
 args = parser.parse_args()
+
+if args.theory == 'maxmix':
+    # maximally mixed cross section: 
+    # stau-mass [GeV] : cross-section [fb]
+    theory_xsec = { 
+        50.0 : 1127.06,
+        90.0 : 165.925,
+        100.0 : 116.739, 
+        125.0 : 54.4897, 
+        150.0 : 28.8227,
+        175.0 : 16.5604,
+        200.0 : 10.127,
+        225.0 : 6.5001,
+        250.0 : 4.33539,
+        275.0 : 2.98007,
+        300.0 : 2.10096,
+        350.0 : 1.11042,
+        400.0 : 0.625364,
+        450.0 : 0.369609,
+        500.0 : 0.226902,
+        550.0 : 0.143696,
+        600.0 : 0.0933425
+    }
+else:
+    # mass-degenerate cross section: 
+    # stau-mass [GeV] : cross-section [fb]
+    theory_xsec = {
+        50.0 : 5368.16,
+        90.0 : 526.345,
+        100.0 : 365.721, 
+        125.0 : 166.905,
+        150.0 : 87.1162,
+        175.0 : 49.7506,
+        200.0 : 30.3144,
+        225.0 : 19.4106,
+        250.0 : 12.9203,
+        275.0 : 8.8748,
+        300.0 : 6.25417,
+        350.0 : 3.30329,
+        400.0 : 1.8592,
+        450.0 : 1.09799,
+        500.0 : 0.673633,
+        550.0 : 0.425957,
+        600.0 : 0.27635
+    }
 
 def read_json_files(input_dir, fixed_lifetime):
     exp0 = []
@@ -111,6 +95,7 @@ def read_json_files(input_dir, fixed_lifetime):
 masses, exp0, exp_plus1, exp_plus2, exp_minus1, exp_minus2, obs = read_json_files(args.input, args.lifetime)
 
 print(masses, exp0, exp_plus1, exp_plus2, exp_minus1, exp_minus2, obs)
+
 # sort every erray by increase of mass
 masses, exp0, exp_plus1, exp_plus2, exp_minus1, exp_minus2, obs = \
     zip(*sorted(zip(masses, exp0, exp_plus1, exp_plus2, exp_minus1, exp_minus2, obs)))
@@ -177,23 +162,23 @@ g_obs = ROOT.TGraphAsymmErrors(
 )
 
 # Styling
-CMS.SetExtraText("Work in progress")
+CMS.SetExtraText("Private work")
 iPos = 0
 canv_name = 'limitplot_cms_root'
 CMS.SetLumi("")
 CMS.SetEnergy("13")
 CMS.ResetAdditionalInfo()
-miny=min(min(exp0),min(theory_xsec_plot))*0.1
-maxy=max(max(exp0),max(theory_xsec_plot))*4
+miny=min(min(exp_minus2),min(theory_xsec_plot))*0.1
+maxy=max(max(exp_plus2),max(theory_xsec_plot))*10
 canv = CMS.cmsCanvas(canv_name, min(masses)-20, max(masses)+20, miny, maxy, "m_{ #tilde{#tau}} [GeV]", "#sigma [fb]", square=CMS.kSquare, extraSpace=0.03, iPos=iPos)
 # CMS.cmsDraw(g_exp, "3", fcolor=ROOT.TColor.GetColor("#85D1FBff"))
 CMS.cmsDraw(g_exp_2sigma, "3L", fcolor=ROOT.TColor.GetColor("#85D1FBff"))
 CMS.cmsDraw(g_exp_1sigma, "Same3L", fcolor=ROOT.TColor.GetColor("#FFDF7Fff"))
 CMS.cmsDraw(g_exp, "SameL", lstyle=ROOT.kDashed, lcolor=ROOT.kBlack, lwidth=3)
 CMS.cmsDraw(g_theory, "SameL", lstyle=ROOT.kDotted, lcolor=ROOT.kRed, lwidth=3)
-CMS.cmsDraw(g_obs, "LP")
+# CMS.cmsDraw(g_obs, "LP")
 leg = CMS.cmsLeg(0.56, 0.60, 0.95, 0.90, textSize=0.04)
-leg.AddEntry(g_obs, "Observed", "LP")
+# leg.AddEntry(g_obs, "Observed", "LP")
 leg.AddEntry(g_exp, "Median expected", "L")
 leg.AddEntry(g_exp_1sigma, "68% expected", "F")
 leg.AddEntry(g_exp_2sigma, "95% expected", "F")

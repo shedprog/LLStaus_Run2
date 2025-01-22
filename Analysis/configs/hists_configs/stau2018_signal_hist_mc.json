@@ -1,21 +1,4 @@
 {
-// "run_id" : {
-//     "bins": [
-//         {
-//             "name": "run_id",
-//             "label": "Run ID",
-//             "n_or_arr": 9415,
-//             "lo": 297047,
-//             "hi": 306462
-//         }
-//     ],
-//     "fill": {
-//         "run_id": [
-//             "run"
-//         ]
-//     }
-// },
-
 "npvs" : {
     "bins": [
         {
@@ -734,6 +717,65 @@
     }
 },
 
+"jet_select_flav_1":{
+    "bins": [
+        {
+            "name": "flavor",
+            "label": "Leading jet flavor",
+            "n_or_arr": 11,
+            "lo": -1,
+            "hi": 10,
+            "unit": ""
+        }
+    ],
+    "fill": {
+        "flavor": [
+            "Jet_select",
+            "genFlavour",
+            {"leading": 1}
+        ]
+    }
+},
+
+"jet_select_flav_2":{
+    "bins": [
+        {
+            "name": "flavor",
+            "label": "Subleading jet flavor",
+            "n_or_arr": 11,
+            "lo": -1,
+            "hi": 10,
+            "unit": ""
+        }
+    ],
+    "fill": {
+        "flavor": [
+            "Jet_select",
+            "genFlavour",
+            {"leading": 2}
+        ]
+    }
+},
+
+"jet_select_flav":{
+    "bins": [
+        {
+            "name": "flavor",
+            "label": "Jet flavor",
+            "n_or_arr": 11,
+            "lo": -1,
+            "hi": 10,
+            "unit": ""
+        }
+    ],
+    "fill": {
+        "flavor": [
+            "Jet_select",
+            "genFlavour"
+        ]
+    }
+},
+
 // "fake_rate_hist" : {
 //     "bins": [
 //         {
@@ -774,46 +816,77 @@
 //             "dxy"
 //         ],
 //         "score_wp": {
-//             "p1": [
-//                 "Jet_select",
-//                 {"function" : "pass_score", "kwargs" : {"thr" : 0.01}}
-//             ],
 //             "p05": [
 //                 "Jet_select",
 //                 {"function" : "pass_score", "kwargs" : {"thr" : 0.05}}
 //             ],
-//             // "p15": [
+//             // "p70": [
 //             //     "Jet_select",
-//             //     {"function" : "pass_score", "kwargs" : {"thr" : 0.15}}
+//             //     {"function" : "pass_score", "kwargs" : {"thr" : 0.70}}
 //             // ],
-//             // "p1716": [
-//             //     "Jet_select",
-//             //     {"function" : "pass_score", "kwargs" : {"thr" : 0.1716}}
-//             // ],
-//             // "p20": [
-//             //     "Jet_select",
-//             //     {"function" : "pass_score", "kwargs" : {"thr" : 0.20}}
-//             // ],
-//             "p70": [
-//                 "Jet_select",
-//                 {"function" : "pass_score", "kwargs" : {"thr" : 0.70}}
-//             ],
-//             "p80": [
-//                 "Jet_select",
-//                 {"function" : "pass_score", "kwargs" : {"thr" : 0.80}}
-//             ],
 //             "p9900": [
 //                 "Jet_select",
 //                 {"function" : "pass_score", "kwargs" : {"thr" : 0.9900}}
 //             ],
-//             // "p9972": [
+//         }
+//     }
+// },
+
+// "fake_rate_hist_flav":{
+//     "bins": [
+//         {
+//             "name": "jet_flavor",
+//             "label": "Jet flavor",
+//             "n_or_arr": 11,
+//             "lo": -1,
+//             "hi": 10,
+//             "unit": ""
+//         },
+//         {
+//             "name": "jet_pt",
+//             "label": "Jet p_{T}",
+//             "n_or_arr": [20, 30, 40, 50, 70, 120, 1000],
+//             "unit": "GeV"
+//         },
+//         {
+//             "name": "jet_dxy",
+//             "label": "Jet dxy",
+//             "n_or_arr": [0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 2.0, 4.0, 10.0, 16.0, 20.0, 30.0, 50.0],
+//             "unit": "cm"
+//         }
+//     ],
+//     "cats" : [
+//         {
+//             "name": "score_wp",
+//             "label": "score_wp"
+//         }
+//     ],
+//     "fill": {
+//         "jet_flavor": [
+//             "Jet_select",
+//             "genFlavour"
+//         ],
+//         "jet_pt": [
+//             "Jet_select",
+//             "pt"
+//         ],
+//         "jet_dxy": [
+//             "Jet_select",
+//             "dxy"
+//         ],
+//         "score_wp": {
+//             "p05": [
+//                 "Jet_select",
+//                 {"function" : "pass_score", "kwargs" : {"thr" : 0.05}}
+//             ],
+//             // "p70": [
 //             //     "Jet_select",
-//             //     {"function" : "pass_score", "kwargs" : {"thr" : 0.9972}}
+//             //     {"function" : "pass_score", "kwargs" : {"thr" : 0.70}}
 //             // ],
-//             // "p9996": [
-//             //     "Jet_select",
-//             //     {"function" : "pass_score", "kwargs" : {"thr" : 0.9996}}
-//             // ]
+//             "p9900": [
+//                 "Jet_select",
+//                 {"function" : "pass_score", "kwargs" : {"thr" : 0.9900}}
+//             ],
 //         }
 //     }
 // },

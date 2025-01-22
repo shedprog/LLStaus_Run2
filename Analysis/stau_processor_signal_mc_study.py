@@ -68,9 +68,6 @@ class Processor(pepper.ProcessorBasicPhysics):
         selector.add_cut("Trigger", partial(
             self.passing_trigger, pos_triggers, neg_triggers))
 
-        # run era
-        selector.set_cat("run_era",{"B","C","D","E","F"})
-        selector.set_multiple_columns(self.run_era_2017)
         
         if is_mc and ( dsname.startswith("DYJetsToLL_M-50") or \
                     dsname.startswith("DY1JetsToLL_M-50") or \
@@ -131,6 +128,13 @@ class Processor(pepper.ProcessorBasicPhysics):
         selector.set_column("Jet_select", self.jet_selection)
         selector.set_multiple_columns(self.missing_energy)
         selector.set_column("num_b_tagged_jets", self.num_b_tagged_jets)
+        selector.add_cut("no_b_tagged_jets", partial(self.b_tagged_jet_cut, name="Jet_select"))
+        selector.add_cut("jet_veto", partial(self.jet_veto, jet_name="Jet_select"))
+        
+        # define jet flavour composition
+        if is_mc:
+            selector.set_multiple_columns(partial(self.gen_lep))
+        selector.set_column("Jet_select", partial(self.jet_selection_flavour, is_mc=is_mc, name="Jet_select"))
 
         # require at least two jet
         selector.add_cut("two_jets", self.has_more_two_jets)
@@ -141,7 +145,6 @@ class Processor(pepper.ProcessorBasicPhysics):
         selector.set_column("PfCands", self.pfcand_valid)
         selector.set_column("Jet_lead_pfcand", partial(self.get_matched_pfCands, match_object="Jet_select", dR=0.4))
         selector.set_column("Jet_select", self.set_jet_dxy)
-        selector.set_column("num_b_tagged_jets", self.num_b_tagged_jets)
 
         # has two jets with the charged pf-cand inside (possible to define dxy)
         selector.add_cut("two_jets_charged", self.has_more_two_jets)
@@ -150,7 +153,6 @@ class Processor(pepper.ProcessorBasicPhysics):
 
         # define jets with dxy > [jet_dxy_min]
         selector.set_column("Jet_select", self.get_displaced_jets)
-        selector.set_column("num_b_tagged_jets", self.num_b_tagged_jets)
 
         # require at least two displaced jet
         selector.add_cut("two_jets_displ", self.has_more_two_jets)
@@ -159,7 +161,6 @@ class Processor(pepper.ProcessorBasicPhysics):
 
         # define jets with passing loose WP
         selector.set_column("Jet_select", self.getloose_jets)
-        selector.set_column("num_b_tagged_jets", self.num_b_tagged_jets)
 
         # require at least two loose jet
         selector.add_cut("two_jets_loose", self.has_more_two_jets)
@@ -185,7 +186,7 @@ class Processor(pepper.ProcessorBasicPhysics):
         selector.set_multiple_columns(partial(self.categories_bins))
 
         selector.add_cut("dphi_min_cut", self.dphi_min_cut)
-        selector.add_cut("ht_cut", self.ht_cut)
+        # selector.add_cut("ht_cut", self.ht_cut)
 
     def run_era_2017(self, data):
         
@@ -545,13 +546,22 @@ class Processor(pepper.ProcessorBasicPhysics):
         return ak.num(jets[b_tagged_idx])
     
     @zero_handler
-    def b_tagged_jet_cut(self, data):
-        # To leading jets are excluded! 
-        jet_not_signal = data["Jet_select"][:,2:]
+    def b_tagged_jet_cut(self, data, name):
+        jets = data[name]
         # Jet_btagDeepFlavB satisfies the Medium (>0.2783) WP:
         # https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL18
-        b_tagged_idx = (jet_not_signal.btagDeepFlavB > 0.2783)
-        return ak.num(jet_not_signal[b_tagged_idx]) == 0
+        # b_tagged_idx = (jets.btagDeepFlavB > 0.2783)
+        year = self.config["year"]
+        tagger = "deepjet"
+        wp = "medium"
+        wptuple = pepper.scale_factors.BTAG_WP_CUTS[tagger][year]
+        threshold = getattr(wptuple, wp)
+        if not hasattr(wptuple, wp):
+            raise pepper.config.ConfigError(
+                "Invalid working point \"{}\" for {} in year {}".format(
+                    wp, tagger, year))
+        b_tagged_idx = (jets.btagDeepFlavB > threshold)
+        return ak.num(jets[b_tagged_idx], axis=1) == 0
     
     @zero_handler
     def set_njets_pass(self, data):
@@ -732,3 +742,102 @@ class Processor(pepper.ProcessorBasicPhysics):
         bins[B5] = 5
 
         return bins
+
+    @zero_handler
+    def jet_veto(self, data, jet_name):
+        # mask events with at least one jet in veto map (might be too tight)
+        jets = data[jet_name]
+        config = self.config["jet_veto_map"]
+        mask_per_jet = config(eta=jets.eta, phi=jets.phi)
+        mask = ak.any(mask_per_jet, axis=-1)
+        return ~mask
+
+    ################################################
+    ##### recompute generator-level jet flavour ####
+    ################################################
+
+    def gen_lep(self, data):
+        if len(data) == 0:
+            return {
+                # "gen_tau" : ak.Array([]),
+                "gen_mu"  : ak.Array([]),
+                "gen_ele" : ak.Array([])
+            }
+            
+        # gen_tau = data.GenPart[
+        #     (abs(data.GenPart.pdgId) == 15)
+        #     & data.GenPart.hasFlags(["isHardProcess"])
+        #     & data.GenPart.hasFlags(["isFirstCopy"])
+        # ]
+        gen_mu = data.GenPart[
+            (abs(data.GenPart.pdgId) == 13)
+            & (data.GenPart.hasFlags(["isDirectTauDecayProduct"]) | data.GenPart.hasFlags(["isHardProcess"]) | data.GenPart.hasFlags(["fromHardProcess"]))
+            & data.GenPart.hasFlags(["isFirstCopy"])
+        ]
+        gen_ele = data.GenPart[
+            (abs(data.GenPart.pdgId) == 11)
+            & (data.GenPart.hasFlags(["isDirectTauDecayProduct"]) | data.GenPart.hasFlags(["isHardProcess"]) | data.GenPart.hasFlags(["fromHardProcess"]))
+            & data.GenPart.hasFlags(["isFirstCopy"])
+        ]
+        return {
+            # "gen_tau" : gen_tau,
+            "gen_mu"  : gen_mu,
+            "gen_ele" : gen_ele
+        }
+        
+
+    def jet_selection_flavour(self, data, is_mc, name="Jet"):
+        
+        jets = data[name]
+        
+        if len(data) == 0:
+            return ak.Array([])
+        if not is_mc:
+            jets["genFlavour"] = ak.full_like(jets.pt, -1)
+            return jets
+        
+        # print(jets)
+        # hadron and parton flavour definition can be found:
+        # https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagMCTools
+        
+        # add hadronic tau flavour:
+        tau_vis = data.GenVisTau[ ((data.GenVisTau.pt > 20) & (abs(data.GenVisTau.eta) < 2.4) &
+                                  (data.GenVisTau.parent.hasFlags(["fromHardProcess"])))
+                                ]
+        matches_tauhad, _ = jets.nearest(tau_vis, return_metric=True, threshold=0.3)
+        matches_mu, _  = jets.nearest(data["gen_mu"], return_metric=True, threshold=0.3)
+        matches_ele, _ = jets.nearest(data["gen_ele"], return_metric=True, threshold=0.3)
+        
+        # print("matches_tauhad", tau_vis)
+        # print("matches_mu", data["gen_mu"])
+        # print("matches_ele", data["gen_ele"])
+              
+        # print("matches_tauhad", matches_tauhad)
+        # print("matches_mu", matches_mu)
+        # print("matches_ele", matches_ele)
+        
+        # assign flavour to each jet
+        # 0 - undefined, partonFlavour=0
+        # 1 - light quark, partonFlavour=1,2,3
+        # 2 - charm, partonFlavour=4
+        # 3 - bottom, partonFlavour=5
+        # 4 - gluon, partonFlavour=21
+        # 5 - muon
+        # 6 - electron
+        # 7 - hadronic tau
+        flavour = ak.full_like(jets.pt, -1)
+        flavour = ak.where(jets.partonFlavour == 0, 0, flavour)
+        flavour = ak.where(
+            (abs(jets.partonFlavour) == 1)
+            | (abs(jets.partonFlavour) == 2)
+            | (abs(jets.partonFlavour) == 3),
+            1, flavour)
+        flavour = ak.where(abs(jets.partonFlavour) == 4, 2, flavour)
+        flavour = ak.where(abs(jets.partonFlavour) == 5, 3, flavour)
+        flavour = ak.where(abs(jets.partonFlavour) == 21, 4, flavour)
+        flavour = ak.where(ak.is_none(matches_mu, axis=1), flavour, 5)
+        flavour = ak.where(ak.is_none(matches_ele, axis=1), flavour, 6)
+        flavour = ak.where(ak.is_none(matches_tauhad, axis=1), flavour, 7)
+        jets["genFlavour"] = flavour
+
+        return jets
